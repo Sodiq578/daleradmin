@@ -1,0 +1,710 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin Panel - Minimal</title>
+  <style>
+    :root{
+      --bg:#f5f7fb;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --accent1: linear-gradient(135deg,#6ee7b7 0%,#3b82f6 100%);
+      --accent2: linear-gradient(135deg,#fbcfe8 0%,#f97316 100%);
+      --glass: rgba(255,255,255,0.7);
+      --radius:14px;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);color:#0f172a}
+    .app{
+      display:grid;
+      grid-template-columns:280px 1fr;
+      gap:26px;
+      padding:28px;
+      min-height:100vh;
+    }
+
+    /* SIDEBAR */
+    .sidebar{
+      background:var(--card);
+      border-radius:var(--radius);
+      padding:18px;
+      box-shadow: 0 6px 18px rgba(15,23,42,0.06);
+      border:1px solid rgba(15,23,42,0.04);
+      display:flex;flex-direction:column;gap:18px;
+    }
+    .brand{
+      display:flex;align-items:center;gap:12px;
+    }
+    .logo{
+      width:44px;height:44px;border-radius:10px;background:var(--accent1);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;
+      box-shadow: 0 6px 16px rgba(59,130,246,0.18);
+    }
+    .panel-title{font-weight:700;font-size:18px;}
+    .nav{display:flex;flex-direction:column;gap:8px}
+    .nav button{
+      text-align:left;padding:10px;border-radius:10px;border:1px solid transparent;background:transparent;font-weight:600;color:#0f172a;cursor:pointer;
+      transition:all .18s;
+    }
+    .nav button:hover{transform:translateX(6px)}
+    .nav button.active{background:var(--glass);border-color:rgba(15,23,42,0.04);box-shadow:inset 0 0 0 1px rgba(0,0,0,0.02)}
+    .mini-stat{display:flex;flex-direction:column;gap:8px}
+    .stat-card{padding:12px;border-radius:10px;background:linear-gradient(180deg,rgba(59,130,246,0.06),rgba(59,130,246,0.02));border:1px solid rgba(59,130,246,0.06)}
+    .stat-card .n{font-weight:700;font-size:18px}
+    .stat-card .l{font-size:12px;color:var(--muted)}
+
+    /* MAIN */
+    .main{
+      display:flex;flex-direction:column;gap:18px;
+    }
+    header.top{
+      display:flex;justify-content:space-between;align-items:center;gap:12px;
+    }
+    .search{
+      display:flex;gap:8px;align-items:center;background:var(--card);padding:10px;border-radius:12px;border:1px solid rgba(15,23,42,0.04);box-shadow:0 6px 18px rgba(2,6,23,0.03);
+    }
+    .search input{border:0;outline:0;background:transparent;font-size:14px}
+
+    /* content area */
+    .card{
+      background:var(--card);border-radius:var(--radius);padding:18px;border:1px solid rgba(15,23,42,0.04);box-shadow:0 10px 30px rgba(2,6,23,0.04)
+    }
+    h2{margin:0 0 12px 0}
+    .flex{display:flex;gap:12px;align-items:center}
+    .grid{display:grid;gap:12px}
+
+    /* lists and forms */
+    table{width:100%;border-collapse:collapse;font-size:14px}
+    th,td{padding:10px;border-bottom:1px solid rgba(15,23,42,0.04);text-align:left}
+    .btn{
+      display:inline-block;padding:8px 12px;border-radius:10px;border:0;cursor:pointer;font-weight:700;
+      background:linear-gradient(90deg,#06b6d4,#3b82f6);color:#fff;
+      box-shadow:0 6px 14px rgba(59,130,246,0.16)
+    }
+    .btn.ghost{background:transparent;color:#0f172a;border:1px solid rgba(15,23,42,0.06);box-shadow:none}
+    .small{padding:6px 8px;font-size:13px;border-radius:8px}
+    input,select,textarea{padding:10px;border-radius:10px;border:1px solid rgba(15,23,42,0.06);outline:none;width:100%;font-size:14px;background:#fff}
+    label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
+
+    /* responsive */
+    @media (max-width:900px){
+      .app{grid-template-columns:1fr; padding:12px}
+      .sidebar{order:2}
+      .main{order:1}
+    }
+
+    /* tiny utilities */
+    .muted{color:var(--muted);font-size:13px}
+    .row{display:flex;gap:12px;align-items:center}
+    .pill{padding:6px 10px;border-radius:999px;background:linear-gradient(90deg,#fde68a,#fca5a5);font-weight:700}
+    .badge{display:inline-block;padding:6px 8px;border-radius:8px;background:#eef2ff;font-weight:700;color:#3730a3}
+
+    /* form layout inside sections */
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .form-grid .full{grid-column:1/-1}
+    .muted-2{color:#374151}
+
+    /* modal */
+    .modal{
+      position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,0.45);z-index:30;
+    }
+    .modal.open{display:flex}
+    .modal .box{width:720px;max-width:96%;background:var(--card);padding:18px;border-radius:12px}
+    .right{margin-left:auto}
+    .tiny{font-size:12px;color:var(--muted)}
+    .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+    .editable{background:#f8fafc;border-radius:8px;padding:8px}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">AP</div>
+        <div>
+          <div class="panel-title">Admin panel</div>
+          <div class="tiny">Minimal UI</div>
+        </div>
+      </div>
+
+      <nav class="nav" aria-label="navigation">
+        <button class="active" data-section="dashboard">Statistikalar</button>
+        <button data-section="users">Foydalanuvchilar</button>
+        <button data-section="schools">Maktablar</button>
+        <button data-section="settings">Sozlamalar</button>
+        <button data-section="plans">Tariflar</button>
+        <button data-section="login">Kirish</button>
+      </nav>
+
+      <div class="mini-stat">
+        <div class="stat-card">
+          <div class="n" id="stat-schools">0</div>
+          <div class="l">Maktablar</div>
+        </div>
+        <div class="stat-card">
+          <div class="n" id="stat-staff">0</div>
+          <div class="l">Xodimlar</div>
+        </div>
+        <div class="stat-card">
+          <div class="n" id="stat-students">0</div>
+          <div class="l">O'quvchilar</div>
+        </div>
+      </div>
+
+      <div class="muted tiny">© 2025 · Sizning kompaniya</div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+      <header class="top">
+        <div class="search card">
+          <input id="globalSearch" placeholder="Qidiruv... (maktab, ism, role)" />
+          <button class="btn ghost small" id="searchBtn">Qidir</button>
+        </div>
+        <div class="row">
+          <div class="badge" id="userBadge">Hozir: <strong id="currentUser">Guest</strong></div>
+        </div>
+      </header>
+
+      <!-- CONTENT AREA -->
+      <section id="dashboard" class="card content-section">
+        <h2>Statistikalar</h2>
+        <div class="grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="card">
+            <div class="muted tiny">Maktablar soni</div>
+            <div style="font-size:22px;font-weight:800" id="dash-schools">0</div>
+          </div>
+          <div class="card">
+            <div class="muted tiny">Xodimlar jami</div>
+            <div style="font-size:22px;font-weight:800" id="dash-staff">0</div>
+          </div>
+          <div class="card">
+            <div class="muted tiny">O'quvchilar jami</div>
+            <div style="font-size:22px;font-weight:800" id="dash-students">0</div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px" class="card">
+          <h3 style="margin-bottom:10px">Tezkor ma'lumotlar</h3>
+          <div class="row">
+            <div class="pill">Aktiv foydalanuvchilar: <strong id="activeUsers">0</strong></div>
+            <div class="tiny right">Oxirgi yangilanish: <span id="lastUpdated">—</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="users" class="card content-section" style="display:none">
+        <h2>Foydalanuvchilar</h2>
+        <div class="row" style="justify-content:space-between">
+          <div class="muted">Xodimlar va o'quvchilarni boshqarish</div>
+          <div>
+            <button class="btn" id="addStaffBtn">Xodim qo'shish</button>
+            <button class="btn ghost" id="addStudentBtn">O'quvchi qo'shish</button>
+          </div>
+        </div>
+
+        <div style="margin-top:12px" class="card">
+          <h3>Xodimlar</h3>
+          <table id="staffTable">
+            <thead><tr><th>Ism</th><th>Lavozim</th><th>Telefon</th><th>Email</th><th>Action</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div style="margin-top:12px" class="card">
+          <h3>O'quvchilar</h3>
+          <table id="studentTable">
+            <thead><tr><th>Ism</th><th>Maktab</th><th>Yosh</th><th>Action</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="schools" class="card content-section" style="display:none">
+        <h2>Maktablar</h2>
+        <div class="row" style="justify-content:space-between">
+          <div class="muted">Maktab qo'shish va hudud bo'yicha ko'rish</div>
+          <div>
+            <button class="btn" id="openAddSchool">Maktab qo'shish</button>
+          </div>
+        </div>
+
+        <div style="margin-top:12px" class="card">
+          <h3>Filtrlash: Hudud bo'yicha</h3>
+          <div class="row">
+            <select id="filterRegion">
+              <option value="">— Hammasi —</option>
+            </select>
+            <input id="filterDistrict" placeholder="tuman bo'yicha qidir..." />
+            <button class="btn ghost" id="filterBtn">Filtrlash</button>
+            <button class="btn" id="clearFilter">Tozalash</button>
+          </div>
+        </div>
+
+        <div style="margin-top:12px" class="card">
+          <h3>Maktablar ro'yxati</h3>
+          <table id="schoolsTable">
+            <thead><tr><th>Nomi</th><th>Hudud</th><th>O'quvchilar</th><th>Xodimlar</th><th>Kontakt</th><th>Action</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="settings" class="card content-section" style="display:none">
+        <h2>Sozlamalar</h2>
+        <div class="grid" style="grid-template-columns:1fr 360px">
+          <div class="card">
+            <h3>Rollar</h3>
+            <div id="rolesList"></div>
+            <div style="margin-top:8px" class="row">
+              <input id="newRoleName" placeholder="Yangi rol nomi" />
+              <button class="btn" id="addRoleBtn">Qo'shish</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Huquqlar (tahrirlash)</h3>
+            <div id="rolePerms" class="editable">Bir rolni chapdan tanlang — huquqlar shu yerda ko'rsatiladi.</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="plans" class="card content-section" style="display:none">
+        <h2>Tariflar (oylik)</h2>
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div class="muted">Tariflar ro'yxati va funksionalliklari</div>
+          <div>
+            <button class="btn" id="addPlanBtn">Tarif qo'shish</button>
+          </div>
+        </div>
+        <div style="margin-top:12px" class="card">
+          <table id="plansTable">
+            <thead><tr><th>Nomi</th><th>Narx (so'm)</th><th>Funksionalliklar</th><th>Action</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="login" class="card content-section" style="display:none">
+        <h2>Kirish</h2>
+        <div class="form-grid">
+          <div>
+            <label>Login</label>
+            <input id="loginUser" value="admin" />
+          </div>
+          <div>
+            <label>Parol</label>
+            <input id="loginPass" type="password" value="1234" />
+          </div>
+          <div class="full">
+            <div class="row" style="justify-content:space-between">
+              <div class="muted">Demo login: <strong>admin</strong> / <strong>1234</strong></div>
+              <div>
+                <button class="btn" id="doLogin">Kirish</button>
+                <button class="btn ghost" id="doLogout" style="display:none">Chiqish</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAL: ADD SCHOOL -->
+  <div class="modal" id="modalSchool">
+    <div class="box">
+      <h3>Maktab qo'shish</h3>
+      <div class="form-grid" style="margin-top:8px">
+        <div>
+          <label>Viloyat</label>
+          <input id="schoolRegion" placeholder="Viloyat..." />
+        </div>
+        <div>
+          <label>Tuman</label>
+          <input id="schoolDistrict" placeholder="Tuman..." />
+        </div>
+        <div class="full">
+          <label>Maktab nomi</label>
+          <input id="schoolName" placeholder="Maktab nomi..." />
+        </div>
+        <div>
+          <label>Website (agar bor bo'lsa)</label>
+          <input id="schoolWebsite" placeholder="https://..." />
+        </div>
+        <div>
+          <label>O'quvchilar soni</label>
+          <input id="schoolStudents" type="number" value="0" />
+        </div>
+        <div>
+          <label>Xodimlar soni</label>
+          <input id="schoolStaff" type="number" value="0" />
+        </div>
+        <div>
+          <label>Mas'ul xodim ismi</label>
+          <input id="schoolManager" placeholder="Ism..." />
+        </div>
+        <div>
+          <label>Kontakt telefon</label>
+          <input id="schoolPhone" placeholder="+998..." />
+        </div>
+        <div class="full">
+          <label>Email</label>
+          <input id="schoolEmail" placeholder="email@example.com" />
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn ghost" id="closeModal">Bekor qilish</button>
+        <button class="btn" id="saveSchool">Saqlash</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD STAFF/STUDENT -->
+  <div class="modal" id="modalPerson">
+    <div class="box">
+      <h3 id="personTitle">Xodim qo'shish</h3>
+      <div style="margin-top:8px" class="form-grid">
+        <div><label>Ism</label><input id="personName" /></div>
+        <div id="personRoleWrap"><label>Lavozim</label><input id="personRole" /></div>
+        <div id="personSchoolWrap"><label>Maktab</label><select id="personSchool"></select></div>
+        <div><label>Telefon</label><input id="personPhone" /></div>
+        <div><label>Email</label><input id="personEmail" /></div>
+        <div><label>Yosh</label><input id="personAge" type="number" /></div>
+      </div>
+      <div class="actions">
+        <button class="btn ghost" id="closePerson">Bekor</button>
+        <button class="btn" id="savePerson">Saqlash</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JS -->
+  <script>
+    /* --- Demo boshlang'ich ma'lumotlar --- */
+    const data = {
+      currentUser: null,
+      users: {
+        staff: [
+          {id:1, name:'Ali Karimov', role:'Direktor', phone:'+998901234567', email:'ali@school.uz', schoolId:1},
+          {id:2, name:'Gulbahor Rustamova', role:'Bugalteriya', phone:'+998907654321', email:'gulbahor@school.uz', schoolId:1},
+        ],
+        students: [
+          {id:1, name:'Javlon A.', age:12, schoolId:1},
+          {id:2, name:'Nodira B.', age:11, schoolId:1},
+        ]
+      },
+      schools: [
+        {id:1, region:'Toshkent viloyati', district:'Parkent', name:'Parkent 1-son maktab', website:'', students:200, staff:12, manager:'Ali Karimov', phone:'+998901234567', email:'parkent1@edu.uz'},
+        {id:2, region:'Samarqand', district:'Bulungur', name:'Bulungur maktabi', website:'http://bulungur.edu.uz', students:120, staff:8, manager:'Zoir Mirzaev', phone:'+998909001122', email:'bulungur@edu.uz'}
+      ],
+      roles: [
+        {id:1,name:'Superadmin', perms:['maktab:crud','user:crud','settings:edit']},
+        {id:2,name:'Direktor', perms:['maktab:view','students:manage']},
+        {id:3,name:'Bugalteriya', perms:['finance:view']}
+      ],
+      plans: [
+        {id:1,name:'Basic', price:50000, features:'Ro\'yxat, statistika'},
+        {id:2,name:'Pro', price:150000, features:'Hammasi: import/export, cheksiz maktab'}
+      ]
+    };
+
+    /* --- Elementlar --- */
+    const sections = document.querySelectorAll('.content-section');
+    const navButtons = document.querySelectorAll('.nav button');
+    const statSchools = document.getElementById('stat-schools');
+    const statStaff = document.getElementById('stat-staff');
+    const statStudents = document.getElementById('stat-students');
+    const dashSchools = document.getElementById('dash-schools');
+    const dashStaff = document.getElementById('dash-staff');
+    const dashStudents = document.getElementById('dash-students');
+    const lastUpdated = document.getElementById('lastUpdated');
+    const currentUserEl = document.getElementById('currentUser');
+    const userBadge = document.getElementById('userBadge');
+
+    /* --- Navigation --- */
+    navButtons.forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        navButtons.forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        const sec = btn.dataset.section;
+        sections.forEach(s=> s.id === sec ? s.style.display='block' : s.style.display='none');
+      });
+    });
+
+    /* --- Statistikani yangilash --- */
+    function refreshStats(){
+      statSchools.textContent = data.schools.length;
+      statStaff.textContent = data.users.staff.length;
+      statStudents.textContent = data.users.students.length;
+
+      dashSchools.textContent = data.schools.length;
+      dashStaff.textContent = data.users.staff.length;
+      dashStudents.textContent = data.users.students.length;
+
+      document.getElementById('activeUsers').textContent = data.users.staff.length + data.users.students.length;
+      lastUpdated.textContent = new Date().toLocaleString();
+    }
+
+    /* --- Populate tables --- */
+    function renderStaff(){
+      const tbody = document.querySelector('#staffTable tbody'); tbody.innerHTML='';
+      data.users.staff.forEach(s=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${s.name}</td><td>${s.role}</td><td>${s.phone || '—'}</td><td>${s.email || '—'}</td>
+          <td>
+            <button class="small btn ghost" data-id="${s.id}" data-action="edit-staff">Tahrirlash</button>
+            <button class="small btn" data-id="${s.id}" data-action="del-staff">O'chirish</button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+    }
+    function renderStudents(){
+      const tbody = document.querySelector('#studentTable tbody'); tbody.innerHTML='';
+      data.users.students.forEach(s=>{
+        const school = data.schools.find(x=>x.id===s.schoolId);
+        const schoolName = school ? school.name : '—';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${s.name}</td><td>${schoolName}</td><td>${s.age || '—'}</td>
+          <td>
+            <button class="small btn ghost" data-id="${s.id}" data-action="edit-student">Tahrirlash</button>
+            <button class="small btn" data-id="${s.id}" data-action="del-student">O'chirish</button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+    }
+    function renderSchools(filter = {}) {
+      const tbody = document.querySelector('#schoolsTable tbody'); tbody.innerHTML='';
+      const rows = data.schools.filter(s=>{
+        if(filter.region && s.region !== filter.region) return false;
+        if(filter.district && !s.district.toLowerCase().includes(filter.district.toLowerCase())) return false;
+        return true;
+      });
+      rows.forEach(s=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${s.name}</td><td>${s.region} / ${s.district}</td><td>${s.students}</td><td>${s.staff}</td><td>${s.phone || '—'}</td>
+          <td>
+            <button class="small btn ghost" data-id="${s.id}" data-action="view-school">Ko'rish</button>
+            <button class="small btn" data-id="${s.id}" data-action="del-school">O'chirish</button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+      // fill filter regions
+      const regSel = document.getElementById('filterRegion');
+      const regions = Array.from(new Set(data.schools.map(x=>x.region)));
+      regSel.innerHTML = '<option value="">— Hammasi —</option>' + regions.map(r=>`<option value="${r}">${r}</option>`).join('');
+    }
+
+    function renderRoles(){
+      const wrap = document.getElementById('rolesList'); wrap.innerHTML='';
+      data.roles.forEach(r=>{
+        const div = document.createElement('div');
+        div.style.display='flex';div.style.justifyContent='space-between';div.style.alignItems='center';div.style.padding='8px 0';
+        div.innerHTML = `<div><strong>${r.name}</strong><div class="tiny">${r.perms.join(', ') || '—'}</div></div>
+          <div>
+            <button class="small btn ghost" data-id="${r.id}" data-action="edit-role">Tahrirlash</button>
+            <button class="small btn" data-id="${r.id}" data-action="del-role">O'chirish</button>
+          </div>`;
+        wrap.appendChild(div);
+      });
+    }
+
+    function renderPlans(){
+      const tbody = document.querySelector('#plansTable tbody'); tbody.innerHTML='';
+      data.plans.forEach(p=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${p.name}</td><td>${p.price.toLocaleString()}</td><td>${p.features}</td>
+          <td>
+            <button class="small btn ghost" data-id="${p.id}" data-action="edit-plan">Tahrirlash</button>
+            <button class="small btn" data-id="${p.id}" data-action="del-plan">O'chirish</button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    /* --- Initial render --- */
+    function initialRender(){
+      renderStaff(); renderStudents(); renderSchools(); renderRoles(); renderPlans(); refreshStats();
+      document.getElementById('currentUser').textContent = data.currentUser || 'Guest';
+    }
+    initialRender();
+
+    /* --- Modallar va formalar --- */
+    const modalSchool = document.getElementById('modalSchool');
+    document.getElementById('openAddSchool').addEventListener('click',()=>{ modalSchool.classList.add('open'); });
+    document.getElementById('closeModal').addEventListener('click',()=>{ modalSchool.classList.remove('open'); });
+    document.getElementById('saveSchool').addEventListener('click',()=>{
+      const region = document.getElementById('schoolRegion').value.trim();
+      const district = document.getElementById('schoolDistrict').value.trim();
+      const name = document.getElementById('schoolName').value.trim();
+      if(!region || !district || !name){ alert('Iltimos, viloyat, tuman va nomni to\'ldiring'); return; }
+      const newId = Date.now();
+      const school = {
+        id:newId, region, district, name,
+        website:document.getElementById('schoolWebsite').value.trim(),
+        students:parseInt(document.getElementById('schoolStudents').value)||0,
+        staff:parseInt(document.getElementById('schoolStaff').value)||0,
+        manager:document.getElementById('schoolManager').value.trim(),
+        phone:document.getElementById('schoolPhone').value.trim(),
+        email:document.getElementById('schoolEmail').value.trim()
+      };
+      data.schools.push(school);
+      modalSchool.classList.remove('open');
+      // clear inputs
+      ['schoolRegion','schoolDistrict','schoolName','schoolWebsite','schoolStudents','schoolStaff','schoolManager','schoolPhone','schoolEmail'].forEach(id=>document.getElementById(id).value='');
+      renderSchools(); refreshStats(); alert('Maktab qo\'shildi');
+    });
+
+    // Filter controls
+    document.getElementById('filterBtn').addEventListener('click',()=>{
+      const region = document.getElementById('filterRegion').value;
+      const district = document.getElementById('filterDistrict').value.trim();
+      renderSchools({region,district});
+    });
+    document.getElementById('clearFilter').addEventListener('click',()=>{
+      document.getElementById('filterRegion').value='';
+      document.getElementById('filterDistrict').value='';
+      renderSchools();
+    });
+
+    /* --- Add staff/student modal --- */
+    const modalPerson = document.getElementById('modalPerson');
+    const personTitle = document.getElementById('personTitle');
+    const personSchoolSel = document.getElementById('personSchool');
+
+    function openPersonModal(type, id=null){
+      modalPerson.classList.add('open');
+      personTitle.textContent = type === 'staff' ? 'Xodim qo\'shish' : 'O\'quvchi qo\'shish';
+      document.getElementById('personName').value='';
+      document.getElementById('personRole').value='';
+      document.getElementById('personPhone').value='';
+      document.getElementById('personEmail').value='';
+      document.getElementById('personAge').value='';
+      personSchoolSel.innerHTML = data.schools.map(s=>`<option value="${s.id}">${s.name} — ${s.region}</option>`).join('');
+      if(type==='student'){ document.getElementById('personRoleWrap').style.display='none'; document.getElementById('personAge').parentElement.style.display='block'; }
+      else { document.getElementById('personRoleWrap').style.display='block'; document.getElementById('personAge').parentElement.style.display='none'; }
+      modalPerson.dataset.type = type;
+      modalPerson.dataset.editId = id || '';
+    }
+    document.getElementById('addStaffBtn').addEventListener('click',()=>openPersonModal('staff'));
+    document.getElementById('addStudentBtn').addEventListener('click',()=>openPersonModal('student'));
+    document.getElementById('closePerson').addEventListener('click',()=>modalPerson.classList.remove('open'));
+    document.getElementById('savePerson').addEventListener('click',()=>{
+      const type = modalPerson.dataset.type;
+      const name = document.getElementById('personName').value.trim();
+      const schoolId = parseInt(document.getElementById('personSchool').value);
+      if(!name){ alert('Ism kiriting'); return; }
+      if(type==='staff'){
+        const role = document.getElementById('personRole').value.trim() || 'Xodim';
+        const phone = document.getElementById('personPhone').value.trim();
+        const email = document.getElementById('personEmail').value.trim();
+        const newId = Date.now();
+        data.users.staff.push({id:newId,name,role,phone,email,schoolId});
+      } else {
+        const age = parseInt(document.getElementById('personAge').value) || null;
+        const newId = Date.now();
+        data.users.students.push({id:newId,name,age,schoolId});
+      }
+      modalPerson.classList.remove('open');
+      renderStaff(); renderStudents(); refreshStats();
+    });
+
+    /* --- Table actions delegation --- */
+    document.addEventListener('click',(e)=>{
+      const act = e.target.dataset.action;
+      if(!act) return;
+      const id = parseInt(e.target.dataset.id);
+      // staff actions
+      if(act==='del-staff'){ if(confirm('Xodim o\'chiriladi. Davom etilsinmi?')){ data.users.staff = data.users.staff.filter(x=>x.id!==id); renderStaff(); refreshStats(); } }
+      if(act==='edit-staff'){ const s = data.users.staff.find(x=>x.id===id); openPersonModal('staff'); document.getElementById('personName').value=s.name; document.getElementById('personRole').value=s.role; document.getElementById('personPhone').value=s.phone; document.getElementById('personEmail').value=s.email; document.getElementById('personSchool').value=s.schoolId; }
+      // student
+      if(act==='del-student'){ if(confirm('O\'quvchi o\'chiriladi. Davom etilsinmi?')){ data.users.students = data.users.students.filter(x=>x.id!==id); renderStudents(); refreshStats(); } }
+      if(act==='edit-student'){ const s = data.users.students.find(x=>x.id===id); openPersonModal('student'); document.getElementById('personName').value=s.name; document.getElementById('personAge').value=s.age; document.getElementById('personSchool').value=s.schoolId; }
+      // school
+      if(act==='del-school'){ if(confirm('Maktab o\'chiriladi. Davom etilsinmi?')){ data.schools = data.schools.filter(x=>x.id!==id); renderSchools(); refreshStats(); } }
+      if(act==='view-school'){ const s = data.schools.find(x=>x.id===id); alert(`Maktab: ${s.name}\nHudud: ${s.region}/${s.district}\nManager: ${s.manager}\nTelefon: ${s.phone}\nEmail: ${s.email}\nO'quvchilar: ${s.students}\nXodimlar: ${s.staff}`); }
+      // roles
+      if(act==='del-role'){ if(confirm('Rol o\'chiriladi.')){ data.roles = data.roles.filter(r=>r.id!==id); renderRoles(); } }
+      if(act==='edit-role'){ const r = data.roles.find(x=>x.id===id); const newName = prompt('Rol nomi:', r.name); if(newName){ r.name = newName; r.perms = prompt('Huquqlar (vergul bilan):', r.perms.join(','))?.split(',').map(s=>s.trim()).filter(Boolean) || []; renderRoles(); } }
+      // plans
+      if(act==='del-plan'){ if(confirm('Tarif o\'chiriladi.')){ data.plans = data.plans.filter(p=>p.id!==id); renderPlans(); } }
+      if(act==='edit-plan'){ const p = data.plans.find(x=>x.id===id); const newName = prompt('Nomi:',p.name); if(newName){ p.name=newName; p.price = parseInt(prompt('Narxi:',p.price))||p.price; p.features = prompt('Funksionalliklar:', p.features)||p.features; renderPlans(); } }
+    });
+
+    /* --- Roles UI --- */
+    document.getElementById('addRoleBtn').addEventListener('click',()=>{
+      const name = document.getElementById('newRoleName').value.trim();
+      if(!name){ alert('Rol nomi kiriting'); return; }
+      data.roles.push({id:Date.now(), name, perms:[]});
+      document.getElementById('newRoleName').value='';
+      renderRoles();
+    });
+    document.getElementById('rolesList').addEventListener('click',(e)=>{
+      const btn = e.target.closest('button');
+      if(!btn) return;
+    });
+
+    /* --- Plans --- */
+    document.getElementById('addPlanBtn').addEventListener('click',()=>{
+      const name = prompt('Tarif nomi:'); if(!name) return;
+      const price = parseInt(prompt('Narx (so\'m):', '0')) || 0;
+      const features = prompt('Funksionalliklar (vergul bilan):', '—') || '';
+      data.plans.push({id:Date.now(), name, price, features});
+      renderPlans();
+    });
+
+    /* --- Search --- */
+    document.getElementById('searchBtn').addEventListener('click',()=>{
+      const q = document.getElementById('globalSearch').value.trim().toLowerCase();
+      if(!q){ alert('Qidiruv so\'z kiriting'); return; }
+      // search schools, staff, students
+      const schools = data.schools.filter(s=> (s.name||'').toLowerCase().includes(q) || (s.region||'').toLowerCase().includes(q));
+      const staff = data.users.staff.filter(s=> (s.name||'').toLowerCase().includes(q) || (s.role||'').toLowerCase().includes(q));
+      const students = data.users.students.filter(s=> (s.name||'').toLowerCase().includes(q));
+      let msg = `Natijalar:\nMaktablar: ${schools.length}\nXodimlar: ${staff.length}\nO'quvchilar: ${students.length}`;
+      alert(msg);
+    });
+
+    /* --- Login demo --- */
+    const doLogin = document.getElementById('doLogin');
+    const doLogout = document.getElementById('doLogout');
+    doLogin.addEventListener('click', ()=>{
+      const u = document.getElementById('loginUser').value.trim();
+      const p = document.getElementById('loginPass').value;
+      if(u==='admin' && p==='1234'){ data.currentUser = 'admin'; currentUserEl.textContent = 'admin'; doLogin.style.display='none'; doLogout.style.display='inline-block'; alert('Kirish muvaffaqiyatli'); }
+      else { alert('Login yoki parol xato'); }
+    });
+    doLogout.addEventListener('click', ()=>{
+      data.currentUser = null; currentUserEl.textContent = 'Guest'; doLogout.style.display='none'; doLogin.style.display='inline-block';
+      alert('Tizimdan chiqildi');
+    });
+
+    /* --- small housekeeping: attach event to add school button (top) --- */
+    document.getElementById('openAddSchool').addEventListener('click', ()=>{ /* already handled */ });
+
+    // initial hook for tables
+    renderStaff(); renderStudents(); renderSchools(); renderRoles(); renderPlans(); refreshStats();
+
+    // keyboard Esc to close modals
+    document.addEventListener('keydown',(e)=>{ if(e.key==='Escape'){ document.querySelectorAll('.modal.open').forEach(m=>m.classList.remove('open')); } });
+
+    // simple auto-save to localStorage (demo)
+    setInterval(()=>{ localStorage.setItem('admin_demo', JSON.stringify(data)); }, 5000);
+
+    // load from storage if exist
+    try{
+      const saved = JSON.parse(localStorage.getItem('admin_demo')||'null');
+      if(saved){
+        // only certain keys to avoid mismatch
+        if(saved.schools) data.schools = saved.schools;
+        if(saved.users) data.users = saved.users;
+        if(saved.roles) data.roles = saved.roles;
+        if(saved.plans) data.plans = saved.plans;
+        renderStaff(); renderStudents(); renderSchools(); renderRoles(); renderPlans(); refreshStats();
+      }
+    }catch(e){ /* ignore */ }
+  </script>
+</body>
+</html>
